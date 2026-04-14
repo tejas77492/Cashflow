@@ -251,6 +251,7 @@ export default function AdminDashboard() {
             <SummaryCard title="Portals" value={portals.length} accent="#f59e0b" />
             <SummaryCard title="Month Total" value={formatCurrency(ms.total_transaction_amount)} accent="#6366f1" />
             <SummaryCard title="Month Bills" value={formatCurrency(ms.total_bill_amount)} accent="#f59e0b" />
+            <SummaryCard title="Month CC" value={formatCurrency(ms.total_cc_amount)} accent="#8b5cf6" />
             <SummaryCard title="Gross Profit" value={formatCurrency(ms.total_profit_amount)} accent="#10b981" />
             <SummaryCard title="Expenses" value={formatCurrency(ms.total_expense_amount)} accent="#ef4444" />
             <SummaryCard title="Net Profit" value={formatCurrency(ms.net_profit_amount)} accent={Number(ms.net_profit_amount) >= 0 ? "#059669" : "#dc2626"} />

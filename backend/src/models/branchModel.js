@@ -1,29 +1,31 @@
-const { query } = require("./baseModel");
+const mongoose = require("mongoose");
 
-const getAllBranches = () =>
-  query("SELECT id, name, status, created_at, updated_at FROM branches ORDER BY id DESC");
+const branchSchema = new mongoose.Schema(
+  {
+    name: { type: String, required: true },
+    status: { type: String, enum: ["active", "inactive"], default: "active" },
+  },
+  {
+    timestamps: { createdAt: "created_at", updatedAt: "updated_at" },
+    toJSON: { virtuals: true },
+    toObject: { virtuals: true },
+  }
+);
 
-const getBranchById = async (id) => {
-  const rows = await query(
-    "SELECT id, name, status, created_at, updated_at FROM branches WHERE id = ?",
-    [id]
-  );
-  return rows[0];
-};
+const Branch = mongoose.models.Branch || mongoose.model("Branch", branchSchema);
 
-const createBranch = async ({ name, status }) => {
-  const result = await query("INSERT INTO branches (name, status) VALUES (?, ?)", [name, status]);
-  return getBranchById(result.insertId);
-};
+const getAllBranches = () => Branch.find().sort({ _id: -1 });
 
-const updateBranch = async (id, { name, status }) => {
-  await query("UPDATE branches SET name = ?, status = ? WHERE id = ?", [name, status, id]);
-  return getBranchById(id);
-};
+const getBranchById = (id) => Branch.findById(id);
 
-const deleteBranch = (id) => query("DELETE FROM branches WHERE id = ?", [id]);
+const createBranch = (data) => Branch.create(data);
+
+const updateBranch = (id, data) => Branch.findByIdAndUpdate(id, data, { new: true });
+
+const deleteBranch = (id) => Branch.findByIdAndDelete(id);
 
 module.exports = {
+  Branch,
   getAllBranches,
   getBranchById,
   createBranch,

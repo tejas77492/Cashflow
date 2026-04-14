@@ -1,36 +1,31 @@
-const { query } = require("./baseModel");
+const mongoose = require("mongoose");
 
-const getAllPortals = () =>
-  query("SELECT id, name, charge_percentage, created_at, updated_at FROM portals ORDER BY id DESC");
+const portalSchema = new mongoose.Schema(
+  {
+    name: { type: String, required: true },
+    charge_percentage: { type: Number, required: true, default: 0 },
+  },
+  {
+    timestamps: { createdAt: "created_at", updatedAt: "updated_at" },
+    toJSON: { virtuals: true },
+    toObject: { virtuals: true },
+  }
+);
 
-const getPortalById = async (id) => {
-  const rows = await query(
-    "SELECT id, name, charge_percentage, created_at, updated_at FROM portals WHERE id = ?",
-    [id]
-  );
-  return rows[0];
-};
+const Portal = mongoose.models.Portal || mongoose.model("Portal", portalSchema);
 
-const createPortal = async ({ name, charge_percentage }) => {
-  const result = await query("INSERT INTO portals (name, charge_percentage) VALUES (?, ?)", [
-    name,
-    charge_percentage,
-  ]);
-  return getPortalById(result.insertId);
-};
+const getAllPortals = () => Portal.find().sort({ _id: -1 });
 
-const updatePortal = async (id, { name, charge_percentage }) => {
-  await query("UPDATE portals SET name = ?, charge_percentage = ? WHERE id = ?", [
-    name,
-    charge_percentage,
-    id,
-  ]);
-  return getPortalById(id);
-};
+const getPortalById = (id) => Portal.findById(id);
 
-const deletePortal = (id) => query("DELETE FROM portals WHERE id = ?", [id]);
+const createPortal = (data) => Portal.create(data);
+
+const updatePortal = (id, data) => Portal.findByIdAndUpdate(id, data, { new: true });
+
+const deletePortal = (id) => Portal.findByIdAndDelete(id);
 
 module.exports = {
+  Portal,
   getAllPortals,
   getPortalById,
   createPortal,

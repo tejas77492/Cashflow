@@ -1,64 +1,41 @@
-const { query } = require("./baseModel");
+const mongoose = require("mongoose");
+
+const settingsSchema = new mongoose.Schema(
+  {
+    cc_charge_percentage: { type: Number, required: true, default: 2.5 },
+    bill_charge_percentage: { type: Number, required: true, default: 3.5 },
+    branch_manager_share_percentage: { type: Number, required: true, default: 30.0 },
+    head_manager_share_percentage: { type: Number, required: true, default: 70.0 },
+  },
+  {
+    timestamps: { createdAt: "created_at", updatedAt: "updated_at" },
+    toJSON: { virtuals: true },
+    toObject: { virtuals: true },
+  }
+);
+
+const Settings = mongoose.models.Settings || mongoose.model("Settings", settingsSchema);
 
 const getSettings = async () => {
-  const rows = await query(
-    `SELECT
-      id,
-      cc_charge_percentage,
-      bill_charge_percentage,
-      branch_manager_share_percentage,
-      head_manager_share_percentage,
-      created_at,
-      updated_at
-     FROM settings
-     ORDER BY id ASC
-     LIMIT 1`
-  );
-  return rows[0];
+  let settings = await Settings.findOne().sort({ _id: 1 });
+  if (!settings) {
+    settings = await Settings.create({});
+  }
+  return settings;
 };
 
-const updateSettings = async ({
-  cc_charge_percentage,
-  bill_charge_percentage,
-  branch_manager_share_percentage,
-  head_manager_share_percentage,
-}) => {
-  const current = await getSettings();
-
-  if (!current) {
-    await query(
-      `INSERT INTO settings
-      (cc_charge_percentage, bill_charge_percentage, branch_manager_share_percentage, head_manager_share_percentage)
-      VALUES (?, ?, ?, ?)`,
-      [
-        cc_charge_percentage,
-        bill_charge_percentage,
-        branch_manager_share_percentage,
-        head_manager_share_percentage,
-      ]
-    );
+const updateSettings = async (data) => {
+  let settings = await Settings.findOne().sort({ _id: 1 });
+  if (!settings) {
+    settings = await Settings.create(data);
   } else {
-    await query(
-      `UPDATE settings
-       SET cc_charge_percentage = ?,
-           bill_charge_percentage = ?,
-           branch_manager_share_percentage = ?,
-           head_manager_share_percentage = ?
-       WHERE id = ?`,
-      [
-        cc_charge_percentage,
-        bill_charge_percentage,
-        branch_manager_share_percentage,
-        head_manager_share_percentage,
-        current.id,
-      ]
-    );
+    settings = await Settings.findByIdAndUpdate(settings._id, data, { new: true });
   }
-
-  return getSettings();
+  return settings;
 };
 
 module.exports = {
+  Settings,
   getSettings,
   updateSettings,
 };

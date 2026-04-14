@@ -39,7 +39,7 @@ export default function TransactionFormPage() {
   const preview = useMemo(() => {
     const amount = Number(form.amount || 0);
     const discount = Number(form.discount || 0);
-    const portal = portals.find((p) => Number(p.id) === Number(form.portal_id));
+    const portal = portals.find((p) => String(p.id) === String(form.portal_id));
     const globalPct =
       form.type === "cc"
         ? Number(settings.cc_charge_percentage || 0)
@@ -62,8 +62,8 @@ export default function TransactionFormPage() {
           ...form,
           amount: Number(form.amount),
           discount: Number(form.discount || 0),
-          branch_id: Number(form.branch_id || user?.branch_id),
-          portal_id: Number(form.portal_id),
+          branch_id: form.branch_id || user?.branch_id,
+          portal_id: form.portal_id,
         }),
       });
       setStatus({ type: "success", msg: "✓ Transaction saved successfully!" });

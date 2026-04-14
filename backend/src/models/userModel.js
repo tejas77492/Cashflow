@@ -1,50 +1,54 @@
-const { query } = require("./baseModel");
+const mongoose = require("mongoose");
 
-const getAllUsers = () =>
-  query(
-    `SELECT u.id, u.name, u.email, u.role, u.branch_id, b.name AS branch_name, u.created_at, u.updated_at
-     FROM users u
-     LEFT JOIN branches b ON b.id = u.branch_id
-     ORDER BY u.id DESC`
-  );
+const userSchema = new mongoose.Schema(
+  {
+    name: { type: String, required: true },
+    email: { type: String, required: true, unique: true },
+    password: { type: String, required: true },
+    role: { type: String, enum: ["admin", "branch_manager", "operator"], required: true },
+    branch_id: { type: mongoose.Schema.Types.ObjectId, ref: "Branch", default: null },
+  },
+  {
+    timestamps: { createdAt: "created_at", updatedAt: "updated_at" },
+  }
+);
+
+const User = mongoose.models.User || mongoose.model("User", userSchema);
+
+const mapUser = (user) => {
+  if (!user) return user;
+  return {
+    ...user,
+    id: user._id,
+    branch_name: user.branch_id ? user.branch_id.name : null,
+    branch_id: user.branch_id ? user.branch_id._id || user.branch_id : null,
+  };
+};
+
+const getAllUsers = async () => {
+  const users = await User.find().populate("branch_id", "name").sort({ _id: -1 }).lean();
+  return users.map(mapUser);
+};
 
 const getUserById = async (id) => {
-  const rows = await query(
-    `SELECT u.id, u.name, u.email, u.role, u.branch_id, b.name AS branch_name, u.created_at, u.updated_at
-     FROM users u
-     LEFT JOIN branches b ON b.id = u.branch_id
-     WHERE u.id = ?`,
-    [id]
-  );
-  return rows[0];
+  const user = await User.findById(id).populate("branch_id", "name").lean();
+  return mapUser(user);
 };
 
-const createUser = async ({ name, email, password, role, branch_id }) => {
-  const result = await query(
-    "INSERT INTO users (name, email, password, role, branch_id) VALUES (?, ?, ?, ?, ?)",
-    [name, email, password, role, branch_id || null]
-  );
-  return getUserById(result.insertId);
+const createUser = async (data) => {
+  const user = await User.create(data);
+  return getUserById(user._id);
 };
 
-const updateUser = async (id, { name, email, password, role, branch_id }) => {
-  const fields = ["name = ?", "email = ?", "role = ?", "branch_id = ?"];
-  const values = [name, email, role, branch_id || null];
-
-  if (password) {
-    fields.push("password = ?");
-    values.push(password);
-  }
-
-  values.push(id);
-
-  await query(`UPDATE users SET ${fields.join(", ")} WHERE id = ?`, values);
+const updateUser = async (id, data) => {
+  await User.findByIdAndUpdate(id, data);
   return getUserById(id);
 };
 
-const deleteUser = (id) => query("DELETE FROM users WHERE id = ?", [id]);
+const deleteUser = (id) => User.findByIdAndDelete(id);
 
 module.exports = {
+  User,
   getAllUsers,
   getUserById,
   createUser,

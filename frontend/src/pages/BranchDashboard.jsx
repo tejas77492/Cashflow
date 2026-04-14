@@ -141,6 +141,7 @@ export default function BranchDashboard() {
       <div className="summary-grid" style={{ marginBottom: 24 }}>
         <SummaryCard title="Month Total" value={formatCurrency(ms.total_transaction_amount)} accent="#3b82f6" />
         <SummaryCard title="Bill Total" value={formatCurrency(ms.total_bill_amount)} accent="#f59e0b" />
+        <SummaryCard title="CC Total" value={formatCurrency(ms.total_cc_amount)} accent="#8b5cf6" />
         <SummaryCard title="Gross Profit" value={formatCurrency(ms.total_profit_amount)} accent="#10b981" />
         <SummaryCard title="Expenses" value={formatCurrency(ms.total_expense_amount)} accent="#ef4444" />
         <SummaryCard
